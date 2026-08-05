@@ -6,8 +6,16 @@ let routeLayer;
 let restaurantLayer;
 let latestOceanData = [];
 let currentRouteDestination = '';
+let selectedPopularCourseId = null;
+let firebasePopularCourses = null;
+let firebaseComments = null;
 // 현재 페이지와 같은 localhost:5500 서버에서만 호출하는 상대 경로
 const API_PATHS = { ocean: '/api/ocean/buoys', restaurants: '/api/restaurants' };
+const popularCourseDefaults = [
+  { id: 'haeundae-safe', title: '해운대 안전 산책 코스', detail: '해운대 해수욕장 → 동백섬 → 청사포', uses: 0 },
+  { id: 'gwangalli-scenic', title: '광안리 야경 감상 코스', detail: '광안리 해수욕장 → 민락수변공원 → 이기대', uses: 0 },
+  { id: 'busan-eco', title: '원도심 친환경 코스', detail: '국제시장 → 용두산공원 → 송도', uses: 0 }
+];
 
 const stationFallbackCoordinates = {
   TW_0086: [35.0833, 128.8316], TW_0087: [35.1035, 129.0403], TW_0088: [35.0757, 129.0158],
@@ -231,6 +239,56 @@ function showRoute(stops) {
   map.getContainer().scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+function getStoredObject(key) { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; } }
+function saveStoredObject(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* 저장 공간을 사용할 수 없는 경우 화면 기능은 계속 제공한다. */ } }
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]); }
+
+function getPopularCourses() {
+  if (firebasePopularCourses?.length) return firebasePopularCourses;
+  const stored = getStoredObject('busanbadaon-course-uses');
+  const courses = [...popularCourseDefaults];
+  Object.values(stored).forEach((course) => {
+    const existing = courses.find((item) => item.id === course.id);
+    if (existing) Object.assign(existing, course); else courses.push(course);
+  });
+  return courses.sort((first, second) => second.uses - first.uses || first.title.localeCompare(second.title, 'ko')).slice(0, 3);
+}
+
+function renderComments() {
+  const courses = getPopularCourses();
+  const selected = courses.find((course) => course.id === selectedPopularCourseId) || courses[0];
+  if (!selected) return;
+  selectedPopularCourseId = selected.id;
+  $('#commentCourseTitle').textContent = selected.title;
+  const allComments = getStoredObject('busanbadaon-course-comments');
+  const comments = firebaseComments?.courseId === selected.id ? firebaseComments.items : (allComments[selected.id] || []);
+  $('#courseComments').innerHTML = comments.length ? comments.map((comment) => `<article><b>${'★'.repeat(comment.rating)}${'☆'.repeat(5 - comment.rating)} <small>${escapeHtml(comment.name)}</small></b><p>${escapeHtml(comment.text)}</p></article>`).join('') : '<p>아직 후기가 없습니다. 첫 평가를 남겨보세요.</p>';
+  window.firebaseCommunity?.watchComments(selected.id);
+}
+
+function renderPopularCourses() {
+  const courses = getPopularCourses();
+  if (!selectedPopularCourseId && courses[0]) selectedPopularCourseId = courses[0].id;
+  $('#popularCourses').innerHTML = courses.map((course, index) => `<button class="popular-course ${course.id === selectedPopularCourseId ? 'selected' : ''}" type="button" data-course-id="${course.id}"><span class="rank">${index + 1}</span><span><b>${escapeHtml(course.title)}</b><small>${escapeHtml(course.detail)}</small><em>${course.uses ? `${course.uses}회 분석됨` : '최근 이용 없음'}</em></span></button>`).join('');
+  document.querySelectorAll('.popular-course').forEach((button) => button.onclick = () => { selectedPopularCourseId = button.dataset.courseId; renderPopularCourses(); renderComments(); });
+  renderComments();
+}
+
+function recordPopularCourse(start, type, stops) {
+  const useStore = getStoredObject('busanbadaon-course-uses');
+  const startName = $('#start').selectedOptions[0].textContent;
+  const styleName = $('#style').selectedOptions[0].textContent;
+  const id = `${start}-${type}`;
+  const previous = useStore[id] || { id, title: `${startName} ${styleName} 코스`, detail: stops.map((stop) => stop[0]).join(' → '), uses: 0 };
+  previous.uses += 1;
+  previous.detail = stops.map((stop) => stop[0]).join(' → ');
+  useStore[id] = previous;
+  saveStoredObject('busanbadaon-course-uses', useStore);
+  window.firebaseCommunity?.recordCourse(previous);
+  selectedPopularCourseId = id;
+  renderPopularCourses();
+}
+
 $('#visitDate').value = new Date().toISOString().slice(0, 10);
 document.querySelectorAll('.chip').forEach((button) => button.onclick = () => { document.querySelectorAll('.chip').forEach((chip) => chip.classList.remove('active')); button.classList.add('active'); activity = button.dataset.activity; });
 $('#routeForm').onsubmit = (event) => {
@@ -242,6 +300,7 @@ $('#routeForm').onsubmit = (event) => {
   currentRouteDestination = stops[0][0];
   $('#transitDestination').textContent = `목적지: ${currentRouteDestination} (첫 번째 추천 장소)`;
   $('#directionsBtn').hidden = false;
+  recordPopularCourse(start, type, stops);
   showRoute(stops);
 };
 
@@ -255,4 +314,19 @@ $('#transitForm').onsubmit = (event) => {
   const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=transit`;
   result.innerHTML = `<p><b>${origin}</b>에서 <b>${currentRouteDestination}</b>까지 대중교통 경로를 확인합니다.</p><a class="button dark" href="${url}" target="_blank" rel="noopener">대중교통 경로 보기 ↗</a>`;
 };
+$('#commentForm').onsubmit = (event) => {
+  event.preventDefault();
+  if (!selectedPopularCourseId) return;
+  const comments = getStoredObject('busanbadaon-course-comments');
+  const entries = comments[selectedPopularCourseId] || [];
+  entries.unshift({ name: $('#commentName').value.trim(), rating: Number($('#commentRating').value), text: $('#commentText').value.trim() });
+  comments[selectedPopularCourseId] = entries.slice(0, 20);
+  saveStoredObject('busanbadaon-course-comments', comments);
+  window.firebaseCommunity?.addComment(selectedPopularCourseId, entries[0]);
+  $('#commentForm').reset();
+  renderComments();
+};
+window.addEventListener('firebase-courses', (event) => { firebasePopularCourses = event.detail; renderPopularCourses(); });
+window.addEventListener('firebase-comments', (event) => { firebaseComments = event.detail; renderComments(); });
+renderPopularCourses();
 buildMap();

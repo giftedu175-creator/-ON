@@ -175,7 +175,7 @@ http.createServer(async (request, response) => {
     if (!response.headersSent) response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end('Not found');
   }
-}).listen(port, () => {
+}).listen(port, '0.0.0.0', () => {
   console.log(`부산바다ON: http://localhost:${port}`);
   console.log(`[KAKAO] KAKAO_REST_API_KEY configured: ${Boolean(kakaoRestApiKey)}`);
 });

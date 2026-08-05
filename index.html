@@ -11,7 +11,7 @@
 <body>
   <header class="topbar">
     <a class="brand" href="#top">부산바다<span>ON</span></a>
-    <nav><a href="#route">여행 추천</a><a href="#guide">환경 가이드</a></nav>
+    <nav><a href="#route">여행 추천</a><a href="#popular">인기 코스</a><a href="#guide">환경 가이드</a></nav>
   </header>
   <main id="top">
     <section class="hero map-hero">
@@ -45,10 +45,17 @@
       <div class="panel transit-panel"><p id="transitDestination">먼저 여행 경로를 분석해 주세요.</p><form id="transitForm"><label>시작 장소<input id="transitOrigin" type="text" placeholder="예: 부산역, 서면역, 해운대역" required /></label><button class="button primary" type="submit">대중교통 길찾기</button></form><div id="transitResult" aria-live="polite"></div></div>
     </section>
 
+    <section id="popular" class="section popular-section">
+      <div class="section-heading"><p class="eyebrow">04 / COMMUNITY PICKS</p><h2>인기있는<br>부산 코스</h2></div>
+      <p class="section-copy">이 기기에서 많이 분석한 코스를 1~3순위로 보여줍니다. 코스를 선택하고 별점과 후기를 남겨 보세요.</p>
+      <div class="popular-grid"><div id="popularCourses" class="popular-courses" aria-live="polite"></div><article class="panel comment-panel"><p class="tiny">COURSE REVIEW</p><h3 id="commentCourseTitle">코스를 선택하세요</h3><div id="courseComments" class="course-comments"><p>선택한 코스의 후기가 이곳에 표시됩니다.</p></div><form id="commentForm" class="comment-form"><label>닉네임<input id="commentName" type="text" maxlength="16" placeholder="예: 바다여행자" required /></label><label>별점<select id="commentRating"><option value="5">★★★★★ · 5점</option><option value="4">★★★★☆ · 4점</option><option value="3">★★★☆☆ · 3점</option><option value="2">★★☆☆☆ · 2점</option><option value="1">★☆☆☆☆ · 1점</option></select></label><label class="comment-text">후기<textarea id="commentText" maxlength="180" placeholder="코스가 어땠는지 남겨주세요." required></textarea></label><button class="button primary" type="submit">후기 등록</button></form><p class="local-note">후기는 현재 이 기기에서만 저장됩니다.</p></article></div>
+    </section>
+
     <section id="guide" class="section guide"><p class="eyebrow">BLUE ACTION</p><h2>바다를 위한 여행 수칙</h2><div><article>01 <b>쓰레기는 되가져가기</b></article><article>02 <b>해양 생물과 거리두기</b></article><article>03 <b>오염 발견 시 기록·신고하기</b></article></div></section>
   </main>
   <footer>부산바다ON / SMART, SAFE &amp; SUSTAINABLE OCEAN TRAVEL</footer>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script type="module" src="firebase-community.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
