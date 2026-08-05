@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
-import { addDoc, collection, doc, getFirestore, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+import { addDoc, collection, deleteDoc, doc, getFirestore, increment, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAQG14FWfSkT2Aow9eGUcJC90jyQXWfr5U',
@@ -47,7 +47,7 @@ window.firebaseCommunity = {
     activeCommentCourseId = courseId;
     commentsUnsubscribe?.();
     commentsUnsubscribe = onSnapshot(query(collection(db, 'courses', courseId, 'comments'), orderBy('createdAt', 'desc'), limit(20)), (snapshot) => {
-      emit('firebase-comments', { courseId, items: snapshot.docs.map((item) => item.data()) });
+      emit('firebase-comments', { courseId, items: snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) });
     }, (error) => console.warn('[Firebase comments]', error.code));
   },
   async addComment(courseId, comment) {
@@ -61,6 +61,11 @@ window.firebaseCommunity = {
         createdAt: serverTimestamp()
       });
     } catch (error) { console.warn('[Firebase comment write]', error.code); }
+  },
+  async deleteComment(courseId, commentId) {
+    if (!auth.currentUser || !commentId) return;
+    try { await deleteDoc(doc(db, 'courses', courseId, 'comments', commentId)); }
+    catch (error) { console.warn('[Firebase comment delete]', error.code); }
   }
 };
 

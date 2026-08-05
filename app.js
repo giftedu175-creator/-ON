@@ -262,7 +262,8 @@ function renderComments() {
   $('#commentCourseTitle').textContent = selected.title;
   const allComments = getStoredObject('busanbadaon-course-comments');
   const comments = firebaseComments?.courseId === selected.id ? firebaseComments.items : (allComments[selected.id] || []);
-  $('#courseComments').innerHTML = comments.length ? comments.map((comment) => `<article><b>${'★'.repeat(comment.rating)}${'☆'.repeat(5 - comment.rating)} <small>${escapeHtml(comment.name)}</small></b><p>${escapeHtml(comment.text)}</p></article>`).join('') : '<p>아직 후기가 없습니다. 첫 평가를 남겨보세요.</p>';
+  $('#courseComments').innerHTML = comments.length ? comments.map((comment) => `<article><div class="review-top"><b>${'★'.repeat(comment.rating)}${'☆'.repeat(5 - comment.rating)} <small>${escapeHtml(comment.name)}</small></b><button class="review-delete" type="button" data-comment-id="${escapeHtml(comment.id || '')}">삭제</button></div><p>${escapeHtml(comment.text)}</p></article>`).join('') : '<p>아직 후기가 없습니다. 첫 평가를 남겨보세요.</p>';
+  document.querySelectorAll('.review-delete').forEach((button) => button.onclick = () => deleteReview(button.dataset.commentId));
   window.firebaseCommunity?.watchComments(selected.id);
 }
 
@@ -287,6 +288,15 @@ function recordPopularCourse(start, type, stops) {
   window.firebaseCommunity?.recordCourse(previous);
   selectedPopularCourseId = id;
   renderPopularCourses();
+}
+
+function deleteReview(commentId) {
+  if (window.prompt('리뷰 삭제 비밀번호를 입력하세요.') !== '1227') { window.alert('비밀번호가 맞지 않습니다.'); return; }
+  const comments = getStoredObject('busanbadaon-course-comments');
+  comments[selectedPopularCourseId] = (comments[selectedPopularCourseId] || []).filter((comment) => comment.id !== commentId);
+  saveStoredObject('busanbadaon-course-comments', comments);
+  window.firebaseCommunity?.deleteComment(selectedPopularCourseId, commentId);
+  renderComments();
 }
 
 $('#visitDate').value = new Date().toISOString().slice(0, 10);
@@ -319,7 +329,7 @@ $('#commentForm').onsubmit = (event) => {
   if (!selectedPopularCourseId) return;
   const comments = getStoredObject('busanbadaon-course-comments');
   const entries = comments[selectedPopularCourseId] || [];
-  entries.unshift({ name: $('#commentName').value.trim(), rating: Number($('#commentRating').value), text: $('#commentText').value.trim() });
+  entries.unshift({ id: crypto.randomUUID(), name: $('#commentName').value.trim(), rating: Number($('#commentRating').value), text: $('#commentText').value.trim() });
   comments[selectedPopularCourseId] = entries.slice(0, 20);
   saveStoredObject('busanbadaon-course-comments', comments);
   window.firebaseCommunity?.addComment(selectedPopularCourseId, entries[0]);
