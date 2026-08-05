@@ -29,7 +29,7 @@
       <div class="route-grid">
         <form id="routeForm" class="panel controls">
           <label>방문 날짜<input id="visitDate" type="date" /></label>
-          <label>출발 위치<select id="start"><option value="haeundae">해운대역</option><option value="gwangalli">광안리역</option><option value="busan">부산역</option><option value="seomyeon">서면역</option><option value="airport">김해공항</option></select></label>
+          <label>출발 위치<input id="start" list="startSuggestions" value="해운대역" placeholder="예: 부산역, 광안리, 감천문화마을" autocomplete="off" /><datalist id="startSuggestions"><option value="해운대역"></option><option value="광안리역"></option><option value="부산역"></option><option value="서면역"></option><option value="김해공항"></option><option value="감천문화마을"></option><option value="송도해수욕장"></option><option value="남포동"></option><option value="전포카페거리"></option></datalist></label>
           <label>여행 스타일<select id="style"><option value="safe">안전 우선</option><option value="scenic">경치 우선</option><option value="eco">친환경 우선</option><option value="fun">재미 위주</option></select></label>
           <label>관심 활동<div class="chips"><button type="button" class="chip active" data-activity="산책">산책</button><button type="button" class="chip" data-activity="사진">사진</button><button type="button" class="chip" data-activity="가족">가족</button><button type="button" class="chip" data-activity="서핑">서핑</button></div></label>
           <button class="button primary wide" type="submit">맞춤 경로 분석하기</button>

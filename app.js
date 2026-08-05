@@ -31,7 +31,7 @@ const nearbyRoutes = {
 };
 const indoorRoutes = { haeundae: [['해운대 영화의전당', '실내 전시·공연'], ['신세계 센텀시티', '실내 쇼핑·휴식'], ['F1963', '실내 문화 공간']], gwangalli: [['F1963', '실내 문화 공간'], ['신세계 센텀시티', '실내 쇼핑·휴식'], ['해운대 영화의전당', '실내 전시·공연']], busan: [['국제시장', '실내·시장 관광'], ['부산근현대역사관', '실내 전시'], ['영도 국립해양박물관', '실내 해양 전시']], seomyeon: [['전포카페거리', '카페 휴식'], ['서면시장', '시장 관광'], ['부산시립미술관', '실내 전시']], airport: [['을숙도문화회관', '실내 문화'], ['국립해양박물관', '실내 해양 전시'], ['국제시장', '실내·시장 관광']] };
 const routeCoordinates = {
-  '다대포 해수욕장': [35.0462, 128.9669], '송도 해상케이블카': [35.0782, 129.0216], '감천문화마을': [35.0977, 129.0107],
+  '해운대 해수욕장': [35.1587, 129.1604], '다대포 해수욕장': [35.0462, 128.9669], '송도 해상케이블카': [35.0782, 129.0216], '감천문화마을': [35.0977, 129.0107],
   '이기대 해안산책로': [35.1216, 129.1238], '광안리 해수욕장': [35.1532, 129.1186], '청사포 다릿돌전망대': [35.1608, 129.1954],
   '오륙도 스카이워크': [35.0992, 129.1206], '송정 해수욕장': [35.1781, 129.1998]
   ,'동백섬 산책로': [35.1552, 129.1518], '민락수변공원': [35.1533, 129.1301], 'F1963': [35.1686, 129.1371], '용두산공원': [35.1008, 129.0321], '국제시장': [35.1024, 129.0260], '영도 흰여울문화마을': [35.0787, 129.0445], '부산시민공원': [35.1681, 129.0590], '전포카페거리': [35.1566, 129.0654], '서면시장': [35.1576, 129.0587], '대저생태공원': [35.2172, 128.9843], '을숙도문화회관': [35.1050, 128.9658], '을숙도생태공원': [35.1043, 128.9599], '해운대 영화의전당': [35.1711, 129.1274], '신세계 센텀시티': [35.1689, 129.1295], '부산근현대역사관': [35.1040, 129.0318], '영도 국립해양박물관': [35.0786, 129.0803], '국립해양박물관': [35.0786, 129.0803], '부산시립미술관': [35.1668, 129.1370]
@@ -42,6 +42,15 @@ function stationStatus(item) { return item.wvhgt !== null && item.wvhgt >= 0.8 ?
 function stationLabel(status) { return status === 'watch' ? '주의' : '추천'; }
 function badMarineWeather(station) { return Number(station?.wspd) >= 10 || Number(station?.wvhgt) >= 1.2; }
 function preferredStationCodes(start) { return { haeundae: ['TW_0062', 'TW_0090'], gwangalli: ['TW_0087', 'TW_0088'], busan: ['TW_0087', 'TW_0088'], seomyeon: ['TW_0087', 'TW_0062'], airport: ['TW_0086', 'TW_0088'] }[start] || []; }
+const startAreaDefaults = {
+  haeundae: { label: '해운대역', coordinates: [35.1631, 129.1580] }, gwangalli: { label: '광안리', coordinates: [35.1532, 129.1186] },
+  busan: { label: '부산역', coordinates: [35.1151, 129.0414] }, seomyeon: { label: '서면역', coordinates: [35.1578, 129.0592] }, airport: { label: '김해공항', coordinates: [35.1796, 128.9381] }
+};
+function resolveStartLocation(place) {
+  const name = String(place || '').replace(/\s/g, '');
+  const area = /광안|수영|민락|이기대/.test(name) ? 'gwangalli' : /서면|전포|부전|부산진|시민공원/.test(name) ? 'seomyeon' : /김해|공항|강서|대저|을숙도/.test(name) ? 'airport' : /부산역|남포|송도|감천|영도|중구|용두산|국제시장/.test(name) ? 'busan' : 'haeundae';
+  return { area, label: String(place || '').trim() || startAreaDefaults[area].label, coordinates: startAreaDefaults[area].coordinates };
+}
 function chooseStops(start, style) {
   const allBad = latestOceanData.length > 0 && latestOceanData.every(badMarineWeather);
   const localBad = latestOceanData.filter((station) => preferredStationCodes(start).includes(station.obsCode)).some(badMarineWeather);
@@ -229,12 +238,19 @@ function buildMap() {
   loadOceanData();
 }
 
-function showRoute(stops) {
-  const coordinates = stops.map(([name]) => routeCoordinates[name]).filter(Boolean);
+function showRoute(stops, departure) {
+  const destinations = stops.filter(([name]) => routeCoordinates[name]).map(([name]) => ({ name, coordinates: routeCoordinates[name], kind: 'STOP' }));
+  const routeStops = [{ name: departure.label, coordinates: departure.coordinates, kind: '출발' }, ...destinations];
+  const coordinates = routeStops.map((stop) => stop.coordinates);
   if (!coordinates.length) return;
   routeLayer.clearLayers();
   L.polyline(coordinates, { color: '#0879d9', weight: 5, opacity: .9, dashArray: '8 7' }).addTo(routeLayer);
-  coordinates.forEach((coordinate, index) => L.circleMarker(coordinate, { radius: 12, color: '#fff', weight: 3, fillColor: '#0879d9', fillOpacity: 1 }).addTo(routeLayer).bindPopup(`<b>STOP ${index + 1}</b><br>${stops[index][0]}`).bindTooltip(String(index + 1), { permanent: true, direction: 'center', className: 'route-number-tooltip' }));
+  coordinates.forEach((coordinate, index) => {
+    const stop = routeStops[index]; const isDeparture = index === 0;
+    L.circleMarker(coordinate, { radius: 12, color: '#fff', weight: 3, fillColor: isDeparture ? '#21d4fd' : '#0879d9', fillOpacity: 1 }).addTo(routeLayer)
+      .bindPopup(`<b>${isDeparture ? '출발 위치' : `STOP ${index}`}</b><br>${stop.name}`)
+      .bindTooltip(isDeparture ? 'S' : String(index), { permanent: true, direction: 'center', className: 'route-number-tooltip' });
+  });
   map.fitBounds(coordinates, { padding: [55, 55], maxZoom: 12 });
   map.getContainer().scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -275,9 +291,8 @@ function renderPopularCourses() {
   renderComments();
 }
 
-function recordPopularCourse(start, type, stops) {
+function recordPopularCourse(start, type, stops, startName) {
   const useStore = getStoredObject('busanbadaon-course-uses');
-  const startName = $('#start').selectedOptions[0].textContent;
   const styleName = $('#style').selectedOptions[0].textContent;
   const id = `${start}-${type}`;
   const previous = useStore[id] || { id, title: `${startName} ${styleName} 코스`, detail: stops.map((stop) => stop[0]).join(' → '), uses: 0 };
@@ -302,16 +317,16 @@ function deleteReview(commentId) {
 $('#visitDate').value = new Date().toISOString().slice(0, 10);
 document.querySelectorAll('.chip').forEach((button) => button.onclick = () => { document.querySelectorAll('.chip').forEach((chip) => chip.classList.remove('active')); button.classList.add('active'); activity = button.dataset.activity; });
 $('#routeForm').onsubmit = (event) => {
-  event.preventDefault(); const type = $('#style').value, start = $('#start').value, recommendation = chooseStops(start, type), stops = recommendation.stops, names = stops.map((stop) => stop[0]).join(' → ');
+  event.preventDefault(); const type = $('#style').value, startName = $('#start').value.trim() || '해운대역', startLocation = resolveStartLocation(startName), start = startLocation.area, recommendation = chooseStops(start, type), stops = recommendation.stops, names = stops.map((stop) => stop[0]).join(' → ');
   $('#routeTitle').textContent = recommendation.indoor ? `${activity}에 알맞은 실내 중심 코스` : `${activity}에 알맞은 ${stops[0][0]} 코스`; $('.status').textContent = recommendation.indoor ? '실내 코스 추천' : '추천 완료';
-  $('#routeDescription').textContent = recommendation.indoor ? `${$('#visitDate').value} 기준 ${recommendation.allBad ? '부산 전 해상 상태가 좋지 않아' : '출발지 인근 해상 상태가 좋지 않아'} 실내 관광지 위주로 추천합니다. ${names}` : `${$('#visitDate').value} 기준 출발 위치 주변의 해양 상태를 종합했습니다. ${names} 순서로 약 4시간 여행을 추천합니다.`;
+  $('#routeDescription').textContent = recommendation.indoor ? `${$('#visitDate').value} 기준 ${recommendation.allBad ? '부산 전 해상 상태가 좋지 않아' : `${startName} 인근 해상 상태가 좋지 않아`} 실내 관광지 위주로 추천합니다. ${names}` : `${$('#visitDate').value} 기준 ${startName}과 가까운 부산 권역의 해양 상태를 종합했습니다. ${names} 순서로 약 4시간 여행을 추천합니다.`;
   $('#routeStops').classList.remove('empty'); $('#routeStops').innerHTML = stops.map((stop, index) => `<div class="stop"><span>STOP 0${index + 1}</span><b>${stop[0]}</b><span>${stop[1]}</span></div>`).join('');
   const score = type === 'safe' ? [92, 81, 75] : type === 'eco' ? [84, 94, 78] : type === 'fun' ? [78, 74, 97] : [78, 76, 95]; ['safeScore', 'ecoScore', 'viewScore'].forEach((id, index) => { $(`#${id}`).textContent = score[index]; });
   currentRouteDestination = stops[0][0];
   $('#transitDestination').textContent = `목적지: ${currentRouteDestination} (첫 번째 추천 장소)`;
   $('#directionsBtn').hidden = false;
-  recordPopularCourse(start, type, stops);
-  showRoute(stops);
+  recordPopularCourse(start, type, stops, startName);
+  showRoute(stops, startLocation);
 };
 
 $('#directionsBtn').onclick = () => $('#transit').scrollIntoView({ behavior: 'smooth', block: 'start' });
