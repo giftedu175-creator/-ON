@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>부산바다ON — 해양 안전·환경 관광</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="map-fixes.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top">부산바다<span>ON</span></a>
+    <nav><a href="#route">여행 추천</a><a href="#guide">환경 가이드</a></nav>
+  </header>
+  <main id="top">
+    <section class="hero map-hero">
+      <div class="map-intro"><p class="eyebrow">BUSAN OCEAN INTELLIGENCE</p><h1>부산 바다의<br><em>오늘 상태</em>를<br>한눈에.</h1><p class="hero-copy">국립해양조사원 관측부이의 풍속·파고·수온을 지도에서 확인하고, 추천 관광지를 선택하세요.</p><div class="ocean-summary"><span class="live-dot"></span><b id="summaryTitle">해양관측부이 데이터 연결 대기</b><small id="summaryDetail">환경변수 설정 후 최신 관측값을 표시합니다.</small></div></div>
+      <div class="map-frame"><div id="busanMap" role="region" aria-label="부산 해양 추천 지도"></div><div class="map-overlay"><span class="live-dot"></span>LIVE · 해양 상태 분석 중</div><div class="map-legend"><span><i class="good"></i>양호·추천</span><span><i class="watch"></i>주의</span></div><aside id="stationPanel" class="station-panel" aria-live="polite"><button id="closePanel" type="button" aria-label="상세 패널 닫기">×</button><p>관측소를 선택하세요</p></aside></div>
+    </section>
+
+    <section id="route" class="section route-section">
+      <div class="section-heading"><p class="eyebrow">01 / SMART ROUTE</p><h2>바다 상태에 맞춘<br>부산 여행 경로</h2></div>
+      <div class="route-grid">
+        <form id="routeForm" class="panel controls">
+          <label>방문 날짜<input id="visitDate" type="date" /></label>
+          <label>출발 위치<select id="start"><option value="haeundae">해운대역</option><option value="gwangalli">광안리역</option><option value="busan">부산역</option><option value="seomyeon">서면역</option><option value="airport">김해공항</option></select></label>
+          <label>여행 스타일<select id="style"><option value="safe">안전 우선</option><option value="scenic">경치 우선</option><option value="eco">친환경 우선</option></select></label>
+          <label>관심 활동<div class="chips"><button type="button" class="chip active" data-activity="산책">산책</button><button type="button" class="chip" data-activity="사진">사진</button><button type="button" class="chip" data-activity="가족">가족</button><button type="button" class="chip" data-activity="서핑">서핑</button></div></label>
+          <button class="button primary wide" type="submit">맞춤 경로 분석하기</button>
+        </form>
+        <article class="panel route-result" aria-live="polite">
+          <div class="result-top"><div><p class="tiny">TODAY'S BLUE ROUTE</p><h3 id="routeTitle">조건을 입력해 주세요</h3></div><span class="status">분석 대기</span></div>
+          <p id="routeDescription">날씨, 풍속, 파고와 가상 환경 지표를 종합해 추천합니다.</p>
+          <div id="routeStops" class="stops empty">여행 경로가 이곳에 표시됩니다.</div>
+          <div class="score-row"><div><span>안전</span><b id="safeScore">—</b></div><div><span>환경</span><b id="ecoScore">—</b></div><div><span>경치</span><b id="viewScore">—</b></div></div>
+          <p class="data-note">※ 프로토타입 데이터입니다. 실제 이용 전 공식 기상·해양 안전 정보를 확인하세요.</p>
+          <button id="directionsBtn" class="button dark directions-btn" type="button" hidden>가는 방법 →</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="transit" class="section transit-section">
+      <div class="section-heading"><p class="eyebrow">03 / TRANSIT GUIDE</p><h2>대중교통으로<br>가는 방법</h2></div>
+      <div class="panel transit-panel"><p id="transitDestination">먼저 여행 경로를 분석해 주세요.</p><form id="transitForm"><label>시작 장소<input id="transitOrigin" type="text" placeholder="예: 부산역, 서면역, 해운대역" required /></label><button class="button primary" type="submit">대중교통 길찾기</button></form><div id="transitResult" aria-live="polite"></div></div>
+    </section>
+
+    <section id="guide" class="section guide"><p class="eyebrow">BLUE ACTION</p><h2>바다를 위한 여행 수칙</h2><div><article>01 <b>쓰레기는 되가져가기</b></article><article>02 <b>해양 생물과 거리두기</b></article><article>03 <b>오염 발견 시 기록·신고하기</b></article></div></section>
+  </main>
+  <footer>부산바다ON / SMART, SAFE &amp; SUSTAINABLE OCEAN TRAVEL</footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>

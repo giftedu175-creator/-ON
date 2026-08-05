@@ -1,0 +1,51 @@
+/* Leaflet 기본 pane보다 상단에 두되, 팝업은 항상 마커보다 위에 표시한다. */
+#busanMap .leaflet-marker-pane,
+#busanMap .leaflet-overlay-pane { z-index: 650 !important; }
+
+#busanMap .leaflet-popup-pane { z-index: 700 !important; }
+
+.station-name-tooltip {
+  background: #fff;
+  border: 0;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px #062a4a55;
+  color: #062a4a;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 7px;
+  white-space: nowrap;
+}
+.station-name-tooltip:before { display: none; }
+
+.station-panel {
+  background: #faffff;
+  box-shadow: -8px 10px 30px #04274b55;
+  color: #062a4a;
+  height: calc(100% - 24px);
+  overflow: auto;
+  padding: 20px;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  transform: translateX(calc(100% + 20px));
+  transition: transform .22s ease;
+  width: min(310px, 82%);
+  z-index: 800;
+}
+.station-panel.open { transform: translateX(0); }
+.station-panel button { background: none; border: 0; color: #45718d; cursor: pointer; float: right; font-size: 24px; line-height: 1; }
+.station-panel small { color: #0879d9; font: 10px 'DM Mono', monospace; letter-spacing: .8px; }
+.station-panel h3 { font-size: 22px; margin: 7px 0 3px; }
+.station-panel h4 { border-top: 1px solid #cae7f5; font-size: 15px; margin: 20px 0 10px; padding-top: 16px; }
+.observed-at { color: #527284; font-size: 12px; margin: 0 0 14px; }
+.station-panel dl { display: grid; gap: 6px; margin: 0; }
+.station-panel dl div { align-items: center; background: #eaf7ff; display: flex; justify-content: space-between; padding: 8px; }
+.station-panel dt { color: #496e82; font-size: 12px; }.station-panel dd { font-size: 12px; font-weight: 700; margin: 0; text-align: right; }
+.restaurant-loading { color: #607d8c; font-size: 12px; }.restaurant-list { display: grid; gap: 9px; list-style: none; margin: 0; padding: 0; }
+.restaurant-list li { border-bottom: 1px solid #d7ebf5; display: grid; gap: 3px; padding-bottom: 9px; }.restaurant-list b { font-size: 13px; }.restaurant-list span,.restaurant-list small { color: #527284; font: 11px 'Noto Sans KR', sans-serif; }
+.restaurant-list a { color: inherit; display: grid; gap: 3px; text-decoration: none; }.restaurant-list a:hover b { color: #0879d9; text-decoration: underline; }.restaurant-list em { color: #0879d9; font-size: 11px; font-style: normal; margin-top: 2px; }
+.route-number-tooltip { background: transparent; border: 0; box-shadow: none; color: #fff; font-weight: 800; margin: 0; padding: 0; }.route-number-tooltip:before { display: none; }
+.restaurant-name-tooltip { background: #fff5eb; border: 0; border-radius: 5px; box-shadow: 0 2px 8px #062a4a44; color: #733014; font-family: 'Noto Sans KR', sans-serif; font-size: 10px; font-weight: 700; max-width: 94px; overflow: hidden; padding: 3px 6px; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; }.restaurant-name-tooltip:before { display: none; }
+.directions-btn { float: right; margin-top: 12px; }
+.transit-section { background: #e9f8ff; }.transit-panel { display: grid; gap: 16px; max-width: 720px; }.transit-panel > p { color: #315b75; margin: 0; }.transit-panel form { align-items: end; display: flex; flex-wrap: wrap; gap: 12px; }.transit-panel label { flex: 1 1 290px; }.transit-panel input { box-sizing: border-box; margin-top: 6px; width: 100%; }.transit-panel form .button { flex: 0 0 auto; }.transit-panel #transitResult { color: #315b75; font-size: 14px; }.transit-panel #transitResult p { margin: 0 0 10px; }
